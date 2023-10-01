@@ -11,6 +11,7 @@ fn main() {
 
     let stats = latency::simulate(*request_count, *request_rate, *request_duration, *thread_count);
 
+    println!("Interval between requests: {:.3}ms", stats.interval_between_requests);
     println!("Time to send requests: {:.3}s", stats.time_to_send as f32 / 1000.0);
     println!("Time to process requests: {:.3}s", stats.time_to_process as f32 / 1000.0);
     println!("Max latency: {:.3}s", stats.max_latency as f32 / 1000.0);
