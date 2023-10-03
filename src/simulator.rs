@@ -91,7 +91,7 @@ impl Stats {
     }
 }
 
-pub fn simulate(incoming_requests: &Vec<Request>, thread_count: u32) -> Stats {
+pub fn run(incoming_requests: &Vec<Request>, thread_count: u32) -> Stats {
     let threads = create_threads(thread_count);
 
     let mut stats = Stats::empty();
@@ -209,7 +209,7 @@ mod tests {
             1,
             0,
             interval_between_requests(0));
-        let s = simulate(&r, 1);
+        let s = run(&r, 1);
         assert_eq!(s, Stats::new(0.0, 0.0, 0.0));
     }
 
@@ -219,7 +219,7 @@ mod tests {
             2,
             1000,
             interval_between_requests(1));
-        let s = simulate(&r, 1);
+        let s = run(&r, 1);
         assert_eq!(s, Stats::new(0.0, 1000.0, 2000.0));
     }
 
@@ -229,7 +229,7 @@ mod tests {
             2,
             1000,
             interval_between_requests(2));
-        let s = simulate(&r, 1);
+        let s = run(&r, 1);
         assert_eq!(s, Stats::new(500.0, 500.0, 2000.0,));
     }
 
@@ -239,7 +239,7 @@ mod tests {
             100,
             1000,
             interval_between_requests(0));
-        let s = simulate(&r, 100);
+        let s = run(&r, 100);
         assert_eq!(s, Stats::new(0.0, 0.0, 1000.0));
     }
 
@@ -249,7 +249,7 @@ mod tests {
             100,
             1000,
             interval_between_requests(0));
-        let s = simulate(&r, 50);
+        let s = run(&r, 50);
         assert_eq!(s, Stats::new(1000.0, 0.0, 2000.0));
     }
 
@@ -259,7 +259,7 @@ mod tests {
             101,
             1000,
             interval_between_requests(0));
-        let s = simulate(&r, 50);
+        let s = run(&r, 50);
         assert_eq!(s, Stats::new(2000.0, 0.0, 3000.0));
     }
 
@@ -269,7 +269,7 @@ mod tests {
             3,
             11,
             interval_between_requests(100));
-        let s = simulate(&r, 1);
+        let s = run(&r, 1);
         assert_eq!(s, Stats::new(2.0, 20.0, 33.0));
     }
 }

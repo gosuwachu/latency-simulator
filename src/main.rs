@@ -1,11 +1,12 @@
+use std::error::Error;
 use std::fs::File;
 use std::io;
 use std::io::BufRead;
 use std::path::Path;
-use crate::latency::{create_request_queue, interval_between_requests, Request};
+use crate::simulator::{create_request_queue, interval_between_requests, Request};
 
 mod cli;
-mod latency;
+mod simulator;
 
 fn main() {
     let cmd = cli::cli();
@@ -28,7 +29,7 @@ fn main() {
         requests = load_requests(from_file);
     }
 
-    let stats = latency::simulate(&requests, *thread_count);
+    let stats = simulator::run(&requests, *thread_count);
 
     println!("Time to send requests: {:.3}s", stats.time_to_send as f32 / 1000.0);
     println!("Time to process requests: {:.3}s", stats.time_to_process as f32 / 1000.0);
@@ -37,24 +38,31 @@ fn main() {
 
 fn load_requests(file_path: &str) -> Vec<Request> {
     let mut requests: Vec<Request> = vec![];
-    if let Ok(lines) = read_lines(Path::new(file_path)) {
-        for line in lines {
-            if let Ok(line) = line {
-                let tokens: Vec<&str> = line.split(',').collect();
-                if tokens.len() == 3 {
-                    let timestamp = tokens[0].parse::<f64>();
-                    let duration = tokens[1].parse::<f64>();
-                    if let (Ok(timestamp), Ok(duration)) = (timestamp, duration) {
-                        requests.push(
-                            Request::new(duration, timestamp)
-                        );
+    let result = read_lines(Path::new(file_path));
+    match result {
+        Ok(lines) => {
+            for line in lines {
+                if let Ok(line) = line {
+                    let tokens: Vec<&str> = line.split(',').collect();
+                    if tokens.len() == 3 {
+                        let timestamp = tokens[0].parse::<f64>();
+                        let duration = tokens[1].parse::<f64>();
+                        if let (Ok(timestamp), Ok(duration)) = (timestamp, duration) {
+                            requests.push(
+                                Request::new(duration, timestamp)
+                            );
+                        } else {
+                            eprintln!("WARN: Invalid request format: {line}")
+                        }
                     } else {
-                        println!("WARN: Invalid request format: {line}")
+                        eprintln!("WARN: Invalid request format: {line}")
                     }
-                } else {
-                    println!("WARN: Invalid request format: {line}")
                 }
             }
+        }
+        Err(e) => {
+            eprintln!("ERROR: Failed to load: {} - {}", file_path, e.to_string());
+            std::process::exit(1);
         }
     }
     println!("Loaded {} requests.", requests.len());
