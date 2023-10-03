@@ -1,22 +1,24 @@
 Latency calculator.
 
 ```
-Usage: latency-simulator --request-count <request_count> --rate <request_rate> --processing-duration <request_duration> --threads <thread_count>
+Usage: latency-simulator --threads <thread_count> [COMMAND]
+
+Commands:
+  load-requests      Load requests from a file
+  generate-requests  Generates requests based on provided parameters
+  help               Print this message or the help of the given subcommand(s)
 
 Options:
--c, --request-count <request_count>           Number of requests to send
--r, --rate <request_rate>                     Number of requests per second
--p, --processing-duration <request_duration>  Request processing duration in milliseconds
--t, --threads <thread_count>                  Number of threads processing requests concurrently
--h, --help                                    Print help
--V, --version                                 Print version
+  -t, --threads <thread_count>  Number of threads processing requests concurrently
+  -h, --help                    Print help
+  -V, --version                 Print version
 ```
 
 Example:
 
 ```
-$ latency-simulator --request-count 100 --rate 100 --processing-duration 600 --threads 30
-Time to send requests: 0.990s
-Time to process requests: 2.490s
-Max latency: 0.900s
+$ latency-simulator --threads 300 generate-requests --request-count 100000 --rate 500 --processing-duration 600
+Time to send requests: 199.998s
+Time to process requests: 200.598s
+Max latency: 0.000s
 ```
