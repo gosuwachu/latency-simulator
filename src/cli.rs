@@ -19,9 +19,9 @@ pub fn cli() -> ArgMatches {
             .required(true)
         )
         .arg(arg!(
-                delay: --delay "Visualization delay in milliseconds"
+                step: --step "Visualization speed-up"
             )
-            .value_parser(value_parser!(u64).range(0..))
+            .value_parser(value_parser!(u64).range(1..))
             .action(ArgAction::Set)
             .required(true)
         )
