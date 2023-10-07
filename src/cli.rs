@@ -1,4 +1,4 @@
-use clap::{arg, ArgAction, ArgMatches, command, Command, value_parser};
+use clap::{arg, command, value_parser, ArgAction, ArgMatches, Command};
 
 pub fn cli() -> ArgMatches {
     command!()
