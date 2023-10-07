@@ -53,7 +53,7 @@ fn run_with_visualization(thread_count: u32, step: u64, requests: &Vec<Request>)
     }
 
     simulator::run(
-        &requests,
+        requests,
         thread_count,
         |clock: f64, threads: &Vec<Thread>, latency: f64| {
             while last_clock < clock {
@@ -61,7 +61,7 @@ fn run_with_visualization(thread_count: u32, step: u64, requests: &Vec<Request>)
                 last_clock += step as f64;
                 thread::sleep(time::Duration::from_millis(1));
 
-                for (idx, t) in threads.into_iter().enumerate() {
+                for (idx, t) in threads.iter().enumerate() {
                     let start = *t.start.borrow();
                     let end = *t.busy_until.borrow();
                     let duration = f64::max(0.0, end - start);
@@ -89,7 +89,7 @@ fn run_with_visualization(thread_count: u32, step: u64, requests: &Vec<Request>)
 }
 
 fn run_with_no_visualization(thread_count: u32, requests: &Vec<Request>) {
-    let stats = simulator::run(&requests, thread_count, |_, _, _| {});
+    let stats = simulator::run(requests, thread_count, |_, _, _| {});
 
     println!(
         "Time to send requests: {:.3}s",
