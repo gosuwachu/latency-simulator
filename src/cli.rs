@@ -12,6 +12,19 @@ pub fn cli() -> ArgMatches {
             .action(ArgAction::Set)
             .required(true)
         )
+        .arg(arg!(
+                visualize: --visualize "Visualize request processing"
+            )
+            .action(ArgAction::SetTrue)
+            .required(true)
+        )
+        .arg(arg!(
+                delay: --delay "Visualization delay in milliseconds"
+            )
+            .value_parser(value_parser!(u64).range(0..))
+            .action(ArgAction::Set)
+            .required(true)
+        )
         .subcommand(
             Command::new("load-requests")
                 .about("Load requests from a file")

@@ -4,7 +4,7 @@ use std::ops::Deref;
 #[derive(PartialEq, Debug, Clone)]
 pub struct Request {
     duration: f64,
-    arrived: f64,
+    pub arrived: f64,
     name: String,
 }
 
@@ -19,10 +19,10 @@ impl Request {
 }
 
 #[derive(PartialEq, Debug)]
-struct Thread {
-    start: RefCell<f64>,
-    busy_until: RefCell<f64>,
-    task_name: RefCell<String>,
+pub struct Thread {
+    pub start: RefCell<f64>,
+    pub busy_until: RefCell<f64>,
+    pub task_name: RefCell<String>,
 }
 
 impl Thread {
@@ -127,7 +127,10 @@ impl Stats {
     }
 }
 
-pub fn run(incoming_requests: &Vec<Request>, thread_count: u32) -> Stats {
+pub fn run<F>(incoming_requests: &Vec<Request>, thread_count: u32, mut update: F) -> Stats
+where
+    F: FnMut(f64, &Vec<Thread>),
+{
     let threads = create_threads(thread_count);
 
     let mut stats = Stats::empty();
@@ -136,10 +139,12 @@ pub fn run(incoming_requests: &Vec<Request>, thread_count: u32) -> Stats {
     if let Some(first_request) = incoming_requests.first() {
         clock = first_request.arrived;
     }
+    update(clock, &threads);
 
     for incoming_request in incoming_requests {
         stats.update_time_to_send(incoming_request.arrived);
         clock = f64::max(clock, incoming_request.arrived);
+        update(clock, &threads);
         'waiting_for_available_thread: loop {
             if let Some(thread) = get_first_available_thread(&threads, clock) {
                 thread.update(
@@ -147,6 +152,7 @@ pub fn run(incoming_requests: &Vec<Request>, thread_count: u32) -> Stats {
                     clock + incoming_request.duration,
                     incoming_request.name.clone(),
                 );
+                update(clock, &threads);
 
                 stats.update_time_to_process(*thread.busy_until.borrow());
                 stats.update_max_latency(clock - incoming_request.arrived);
@@ -154,6 +160,7 @@ pub fn run(incoming_requests: &Vec<Request>, thread_count: u32) -> Stats {
                 break 'waiting_for_available_thread;
             } else {
                 clock += 1.0;
+                update(clock, &threads);
             }
         }
     }
