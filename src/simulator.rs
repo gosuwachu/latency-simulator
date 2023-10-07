@@ -4,23 +4,35 @@ use std::cell::RefCell;
 #[derive(PartialEq, Debug, Clone)]
 pub struct Request {
     duration: f64,
-    arrived: f64
+    arrived: f64,
+    name: String
 }
 
 impl Request {
-    pub fn new(duration: f64, arrived: f64) -> Request {
-        Request { duration, arrived }
+    pub fn new(duration: f64, arrived: f64, name: String) -> Request {
+        Request { duration, arrived, name: name }
     }
 }
 
 #[derive(PartialEq, Debug)]
 struct Thread {
-    busy_until: RefCell<f64>
+    start: RefCell<f64>,
+    busy_until: RefCell<f64>,
+    task_name: RefCell<String>
 }
 
 impl Thread {
     fn new() -> Thread {
-        Thread { busy_until: RefCell::new(0.0) }
+        Thread { start: RefCell::new(0.0), busy_until: RefCell::new(0.0), task_name: RefCell::new("".to_string()) }
+    }
+
+    fn update(&self, start_: f64, busy_until_: f64, task_name_: String) {
+      let mut start = self.start.borrow_mut();
+      let mut busy_until = self.busy_until.borrow_mut();
+      let mut task_name = self.task_name.borrow_mut();
+      *start = start_;
+      *busy_until = busy_until_;
+      *task_name = task_name_;
     }
 }
 
@@ -35,8 +47,8 @@ pub fn create_request_queue(request_count: u32, request_duration: u32, interval_
     let mut request_queue = Vec::<Request>::new();
 
     let mut clock = 0.0;
-    for _ in 0..request_count {
-        request_queue.push(Request::new(request_duration as f64, clock));
+    for i in 0..request_count {
+        request_queue.push(Request::new(request_duration as f64, clock, format!("#req{i}")));
         clock += interval_between_requests;
     }
 
@@ -102,10 +114,9 @@ pub fn run(incoming_requests: &Vec<Request>, thread_count: u32) -> Stats {
         clock = f64::max(clock, incoming_request.arrived);
         'waiting_for_available_thread: loop {
             if let Some(thread) = get_first_available_thread(&threads, clock) {
-                let mut busy_until = thread.busy_until.borrow_mut();
-                *busy_until = clock + incoming_request.duration;
+                thread.update(clock, clock + incoming_request.duration, incoming_request.name.clone());
 
-                stats.update_time_to_process(*busy_until);
+                stats.update_time_to_process(*thread.busy_until.borrow());
                 stats.update_max_latency(clock - incoming_request.arrived);
 
                 break 'waiting_for_available_thread;
@@ -124,7 +135,7 @@ mod tests {
 
     #[test]
     fn request_new() {
-        let request = Request::new(1.0, 2.0);
+        let request = Request::new(1.0, 2.0, "".to_string());
         assert_eq!(request.duration, 1.0);
         assert_eq!(request.arrived, 2.0);
     }
@@ -150,8 +161,8 @@ mod tests {
         let queue = create_request_queue(2, 100, 0.0);
         assert_eq!(queue.len(), 2);
         assert_eq!(queue, vec![
-            Request::new(100.0, 0.0),
-            Request::new(100.0, 0.0),
+            Request::new(100.0, 0.0, "#req0".to_string()),
+            Request::new(100.0, 0.0, "#req1".to_string()),
         ]);
     }
 

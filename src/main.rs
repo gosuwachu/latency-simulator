@@ -46,9 +46,10 @@ fn load_requests(file_path: &str) -> Vec<Request> {
                     if tokens.len() == 3 {
                         let timestamp = tokens[0].parse::<f64>();
                         let duration = tokens[1].parse::<f64>();
+                        let name = tokens[2];
                         if let (Ok(timestamp), Ok(duration)) = (timestamp, duration) {
                             requests.push(
-                                Request::new(duration, timestamp)
+                                Request::new(duration, timestamp, name.to_string())
                             );
                         } else {
                             eprintln!("WARN: Invalid request format: {line}")
