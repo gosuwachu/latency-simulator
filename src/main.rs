@@ -2,16 +2,16 @@ use crate::simulator::interval_between_requests;
 use std::{thread, time};
 
 mod cli;
+mod load_requests;
 mod simulator;
 mod tui;
-mod load_requests;
 mod types;
 
 extern crate ncurses;
-use ncurses::*;
-use load_requests::create_request_queue;
-use types::Thread;
 use crate::types::Request;
+use load_requests::create_request_queue;
+use ncurses::*;
+use types::Thread;
 
 fn main() {
     let cmd = cli::cli();
@@ -52,33 +52,37 @@ fn run_with_visualization(thread_count: u32, step: u64, requests: &Vec<Request>)
         last_clock = first_request.arrived;
     }
 
-    simulator::run(&requests, thread_count, |clock: f64, threads: &Vec<Thread>, latency: f64| {
-        while last_clock < clock {
-            clear();
-            last_clock += step as f64;
-            thread::sleep(time::Duration::from_millis(1));
+    simulator::run(
+        &requests,
+        thread_count,
+        |clock: f64, threads: &Vec<Thread>, latency: f64| {
+            while last_clock < clock {
+                clear();
+                last_clock += step as f64;
+                thread::sleep(time::Duration::from_millis(1));
 
-            for (idx, t) in threads.into_iter().enumerate() {
-                let start = *t.start.borrow();
-                let end = *t.busy_until.borrow();
-                let duration = f64::max(0.0, end - start);
-                let elapsed = f64::min(duration, f64::max(0.0, last_clock - start));
-                let percentage = (elapsed / duration * 100.0) as i32;
+                for (idx, t) in threads.into_iter().enumerate() {
+                    let start = *t.start.borrow();
+                    let end = *t.busy_until.borrow();
+                    let duration = f64::max(0.0, end - start);
+                    let elapsed = f64::min(duration, f64::max(0.0, last_clock - start));
+                    let percentage = (elapsed / duration * 100.0) as i32;
 
-                mv(idx as i32, 0);
-                if percentage < 100 {
-                    tui::draw_progress_bar(percentage, 30, &t.task_name.borrow());
-                } else {
-                    tui::draw_progress_bar(0, 30, "");
+                    mv(idx as i32, 0);
+                    if percentage < 100 {
+                        tui::draw_progress_bar(percentage, 30, &t.task_name.borrow());
+                    } else {
+                        tui::draw_progress_bar(0, 30, "");
+                    }
                 }
+
+                mv(max_y - 1, 0);
+                addstr(format!("Latency: {:.3}s", latency as f32 / 1000.0).as_str());
+
+                refresh();
             }
-
-            mv(max_y - 1, 0);
-            addstr(format!("Latency: {:.3}s", latency as f32 / 1000.0).as_str());
-
-            refresh();
-        }
-    });
+        },
+    );
 
     getch();
     endwin();

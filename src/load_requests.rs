@@ -1,8 +1,8 @@
-use std::path::Path;
-use std::io;
-use std::fs::File;
-use std::io::BufRead;
 use crate::types::Request;
+use std::fs::File;
+use std::io;
+use std::io::BufRead;
+use std::path::Path;
 
 pub fn load_requests(file_path: &str) -> Vec<Request> {
     let mut requests: Vec<Request> = vec![];

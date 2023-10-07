@@ -1,5 +1,5 @@
-use std::ops::Deref;
 use crate::types::{Request, Stats, Thread};
+use std::ops::Deref;
 
 pub fn interval_between_requests(request_rate: u32) -> f64 {
     if request_rate > 0 {
@@ -74,8 +74,8 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::load_requests::create_request_queue;
     use super::*;
+    use crate::load_requests::create_request_queue;
 
     #[test]
     fn request_new() {
